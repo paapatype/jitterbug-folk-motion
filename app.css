@@ -1,0 +1,245 @@
+/* ---------------------------------------------------------------
+   Jitterbug Folk — motion study
+   Geometry, type and colour are taken verbatim from the Figma
+   frames "1" (138:36) and "2" (139:55), both 1512 x 982 on white.
+   The only thing added here is time.
+---------------------------------------------------------------- */
+
+:root{
+  /* motion language — retune everything from here */
+  --ease-entry:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-cross:  cubic-bezier(0.4, 0.0, 0.2, 1);
+  --dur-glyph:   1200ms;
+  --dur-fade:    900ms;
+  --stagger-line: 260ms;
+
+  /* the phrase cycler runs on its own, slower clock */
+  --dur-cycle:   1300ms;   /* board 2: one row travelling one step */
+  --stack-bleed: 22px;     /* one row of soft margin above and below the stack window */
+
+  /* board 1 — letters leave and arrive one at a time, never overlapping */
+  --dur-letter:      700ms;  /* one letter's exit, or its entry */
+  --stagger-letter:  40ms;   /* between consecutive letters, left to right */
+  --letter-rise:     28px;   /* how far a letter travels as it leaves */
+  --letter-dip:      4px;    /* the anticipation dip before it rises */
+  --cycle-in-from:   -28px;  /* where an arriving letter starts: negative = from above */
+  --cycle-gap:       150ms;  /* the beat between the last exit and the first entry */
+  --ease-letter-out: cubic-bezier(0.3, 0.0, 0.2, 1);        /* the rise, after the dip */
+  --ease-letter-dip: cubic-bezier(0.4, 0.0, 0.6, 1);        /* into the dip */
+  --ease-letter-in:  cubic-bezier(0.34, 1.35, 0.64, 1);     /* settles past, then back */
+
+  /* the headline reveal — phrased by word and line rather than ticking
+     through characters at a fixed rate */
+  /* the headline arrives a word at a time, fading only — no movement */
+  --headline-dur:   1400ms;  /* one word fading up */
+  --headline-step:  180ms;   /* between words — short against the duration, so
+                                about eight are always mid-fade and the reveal
+                                is a wash rather than a row of separate events */
+
+  --walk-lead:      0.35;    /* the mascot sets off this much of its own length
+                                earlier than the beat it would otherwise meet */
+  --walk-fade:      1600ms;  /* it crossfades in as it enters, rather than
+                                appearing at full strength at the right edge */
+
+  /* board 2 — the ramp a row climbs as it travels to the centre */
+  --ease-throw:      cubic-bezier(0.34, 1.4, 0.64, 1);
+  --grey-ramp:       #6E6E6E;  /* denser than the frame's flat grey */
+  --row-opacity-in:  0.55;     /* entering, below the centre: the weakest state */
+  --row-opacity-out: 0.75;     /* leaving, above the centre */
+  --row-wght-in:     500;    /* the arriving row now carries the leaving row's
+                                weight, so the two grey rows match */
+  --row-wght-out:    500;
+
+  /* frame palette, read from Figma */
+  --ink:    #000000;
+  --grey:   #979797;
+  --paper:  #FFFFFF;
+  --email:  var(--ink);
+  /* the letterforms' colour. The j/b/f SVGs are filled with currentColor and
+     inlined, so this token is the only place the colour is written down. */
+  --letter: #371117;
+
+/* board 2 follows its own frame: cream paper, a deeper red for the
+   letterforms and a red email. Board 1 keeps the values above. */
+}
+body.board-2{
+  --paper:  #FFFAEB;
+  --letter: #610809;
+  --email:  #E2000E;
+
+  --frame-w: 1512px;
+  --frame-h: 982px;
+
+  /* the corner that reveals the board switcher */
+  --switch-zone-w: 360px;
+  --switch-zone-h: 150px;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin:0; padding:0; height:100%;
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.viewport{
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+
+.stage{
+  position:relative;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  background: var(--paper);
+  transform-origin: center center;
+  flex: 0 0 auto;
+}
+
+/* every board element is absolutely placed at its Figma x/y/w/h */
+.node{ position:absolute; }
+.node img{ display:block; width:100%; height:100%; }
+/* inlined letterforms: the SVG fill is currentColor, so the token drives it */
+.node.letter{ color: var(--letter); }
+.node.letter svg{ display:block; width:100%; height:100%; }
+
+/* ---------- typography (Figma: Instrument Sans + Jeju Hallasan) ---------- */
+.t{
+  font-family:'Instrument Sans', system-ui, sans-serif;
+  font-variation-settings:"wdth" 100;
+  font-weight:500;
+  font-size:17px;
+  line-height:22px;
+  color: var(--ink);
+  margin:0;
+  word-break: break-word;
+}
+.t.lead{ font-size:47px; line-height:55px; }
+.t b{ font-weight:700; font-variation-settings:"wdth" 100; }
+.t .email{ color: var(--email); font-weight:500; font-variation-settings:"wdth" 100; }
+
+/* DISPLAY FACE ---------------------------------------------------
+   The frame sets this phrase in JejuHallasan, which is not
+   installed here and is no longer served by Google (its
+   early-access binary 404s). Kadwa is used instead, by request. */
+.brush{
+  font-family:'Kadwa', serif;
+  font-weight:400;
+  font-size:73px;
+  line-height:62px;
+  text-align:center;
+  color: var(--ink);
+  margin:0;
+  white-space: pre-wrap;
+}
+
+/* ---------- entrance states ---------- */
+/* Both frames sit on pure white, so "fade up from white" is an
+   opacity fade — identical result, no per-span colour interpolation. */
+.anim{ opacity:0; }
+.w{ display:inline-block; opacity:0; will-change:opacity, transform; }
+/* no will-change here on purpose: it would promote every one of the 125
+   character spans to its own compositing layer */
+.ch{ opacity:0; }
+
+/* ---------- word cycler: board 1 (one phrase at a time) ----------
+   No overflow clipping here. Kadwa's glyph box is far taller than the
+   frame's 62px leading, so any box edge slices the descenders — and a
+   phrase that fades while half-cut reads as a bar, not a crossfade.
+   The travel is small enough that it needs no window.              */
+.cycler-single{ overflow:visible; }
+.cycler-single .phrase{
+  position:absolute; inset:0;
+  display:flex; align-items:flex-start; justify-content:center;
+}
+.cycler-single .phrase-text{ display:block; width:100%; }
+/* scoped to this cycler on purpose: the typewriter's .ch spans must stay
+   inline, or inline-block boxes would let the headline break mid-word */
+.cycler-single .ch{
+  display:inline-block;
+  will-change:opacity, transform;
+}
+
+/* ---------- word cycler: board 2 (rolling three-line stack) ----------
+   This one is a window by design - the frame shows exactly three lines.
+   The three design rows sit fully opaque; the rows arriving and leaving
+   fade across one row of bleed, so nothing is ever cut by a hard edge. */
+.cycler-stack{ overflow:hidden; }
+.cycler-stack .track{
+  position:absolute; left:0; top:0; width:100%;
+  will-change:transform;
+}
+.cycler-stack .row{
+  height:22px; line-height:22px;
+  white-space:nowrap;
+  /* A row strengthens as it climbs: fainter and lighter at the bottom, black
+     and bold at the centre, easing back toward grey on its way out. Opacity,
+     colour and weight all ride --ease-throw, the same curve as the travel, so
+     they land together instead of reading as three separate steps. */
+  opacity:0;
+  color: var(--grey-ramp);
+  font-variation-settings:"wdth" 100, "wght" var(--row-wght-in);
+  transition: opacity var(--dur-cycle) var(--ease-throw),
+              color var(--dur-cycle) var(--ease-throw),
+              font-variation-settings var(--dur-cycle) var(--ease-throw);
+}
+.cycler-stack .row.pos-in{                 /* below the centre, arriving */
+  opacity: var(--row-opacity-in);
+}
+.cycler-stack .row.pos-out{                /* above the centre, leaving */
+  opacity: var(--row-opacity-out);
+  font-variation-settings:"wdth" 100, "wght" var(--row-wght-out);
+}
+.cycler-stack .row.is-active{              /* the centre line */
+  opacity: 1;
+  color: var(--ink);
+  font-variation-settings:"wdth" 100, "wght" 700;
+}
+
+/* the mascot's walk-in: a canvas so the matte composites over the b behind it */
+.walk{ display:block; width:100%; height:100%; }
+
+/* ---------- hover-only variation switcher ---------- */
+.switcher-zone{
+  position:fixed; top:0; right:0;
+  width:var(--switch-zone-w); height:var(--switch-zone-h);
+  z-index:10;
+}
+.switcher{
+  position:absolute; top:24px; right:28px;
+  display:flex; gap:6px;
+  opacity:0;
+  transition: opacity 200ms var(--ease-cross);
+  pointer-events:none;
+}
+/* `.is-shown` is set from JS on pointer movement into the corner. :hover alone
+   is not enough — it never fires in some embedded/preview browsers, which is
+   how the switcher ended up feeling absent. Keys 1 and 2 work regardless. */
+.switcher-zone:hover .switcher,
+.switcher.is-shown,
+.switcher:focus-within{ opacity:1; pointer-events:auto; }
+
+.switcher button{
+  font-family:'Instrument Sans', system-ui, sans-serif;
+  font-variation-settings:"wdth" 100;
+  font-weight:500;
+  font-size:13px;
+  line-height:1;
+  width:28px; height:28px;
+  border:1px solid rgba(0,0,0,.18);
+  border-radius:50%;
+  background:var(--paper);
+  color:rgba(0,0,0,.55);
+  cursor:pointer;
+  padding:0;
+  transition: color 160ms var(--ease-cross),
+              border-color 160ms var(--ease-cross),
+              background 160ms var(--ease-cross);
+}
+.switcher button:hover{ color:var(--ink); border-color:rgba(0,0,0,.45); }
+.switcher button[aria-current="true"]{
+  background:var(--ink); border-color:var(--ink); color:var(--paper);
+}
