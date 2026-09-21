@@ -276,7 +276,9 @@ function wireSwitcher(current){
 }
 
 (async function init(){
-  const v = new URLSearchParams(location.search).get('v') === '2' ? '2' : '1';
+  // board 2 is the current version and the one the shared link must open on;
+  // board 1 is the earlier board, still reachable at ?v=1
+  const v = new URLSearchParams(location.search).get('v') === '1' ? '1' : '2';
   document.title = `Jitterbug Folk — board ${v}`;
   document.body.classList.add('board-' + v);      // board-scoped colour tokens
 

@@ -3,8 +3,8 @@
 Animated prototype of the two selected Figma frames, `1` (138:36) and `2` (139:55).
 Geometry, type and colour come from the file; the only thing added is time.
 
-    http://localhost:4321/?v=1     board 1
-    http://localhost:4321/?v=2     board 2
+    http://localhost:4321/         board 2 — the current version
+    http://localhost:4321/?v=1     board 1 — the earlier board
 
 Three ways to switch board:
 
