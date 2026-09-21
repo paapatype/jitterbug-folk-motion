@@ -117,8 +117,12 @@ const EFFECTS = {
     const ctx = el.getContext('2d');
     const x0 = manifest.x[0];
     const draw = i => {
+      // frames arrive progressively; if this one has not landed yet, hold the
+      // most recent one that has rather than blanking the mascot
+      let f = frames[i];
+      for (let k = i; !f && k >= 0; k--) f = frames[k];
       ctx.clearRect(0, 0, el.width, el.height);
-      if (frames[i]) ctx.drawImage(frames[i], 0, 0, el.width, el.height);
+      if (f) ctx.drawImage(f, 0, 0, el.width, el.height);
       // transform rather than `left`: it composites, and it never asks the
       // page for a layout on a frame the mascot is mid-stride
       el.style.transform = `translateX(${(manifest.x[i] - x0).toFixed(2)}px)`;

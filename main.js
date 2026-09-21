@@ -63,15 +63,25 @@ async function loadTints(nodes){
    settled pose exactly on the mascot's Figma box */
 async function loadWalk(base){
   const manifest = await fetch(base + 'walk.json').then(r => r.json());
-  // decode() rather than onload: a frame that is loaded but not yet decoded
-  // decodes on its first drawImage, which is exactly when the walk starts and
-  // is what made its opening stutter
-  const frames = await Promise.all(
-    Array.from({ length: manifest.count }, async (_, i) => {
-      const im = new Image();
-      im.src = `${base}f${String(i).padStart(3, '0')}.webp`;
-      try { await im.decode(); return im; } catch { return null; }
-    }));
+  // The frames are ~5MB in total. Awaiting all of them before building the
+  // board left the page blank for as long as the download took — invisible on
+  // localhost, ten to forty seconds over the network. So: take a head start of
+  // frames, hand the board back, and let the rest arrive in the background.
+  //
+  // decode() rather than onload, because a frame that is loaded but not yet
+  // decoded decodes on its first drawImage — which is exactly when the walk
+  // starts, and is what made its opening stutter.
+  const frames = new Array(manifest.count).fill(null);
+  const load = i => {
+    const im = new Image();
+    im.src = `${base}f${String(i).padStart(3, '0')}.webp`;
+    return im.decode().then(() => { frames[i] = im; }).catch(() => {});
+  };
+
+  const HEAD_START = Math.min(24, manifest.count);   // ~1s of walking
+  await Promise.all(Array.from({ length: HEAD_START }, (_, i) => load(i)));
+  for (let i = HEAD_START; i < manifest.count; i++) load(i);   // not awaited
+
   return { manifest, frames };
 }
 
