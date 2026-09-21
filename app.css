@@ -140,7 +140,10 @@ html, body{
 /* Both frames sit on pure white, so "fade up from white" is an
    opacity fade — identical result, no per-span colour interpolation. */
 .anim{ opacity:0; }
-.w{ display:inline-block; opacity:0; will-change:opacity, transform; }
+/* no will-change: board 2 has 73 of these, and pinning every one to its own
+   compositing layer for the whole session is what made the moment they all
+   start together hitch. Short WAAPI animations are promoted on their own. */
+.w{ display:inline-block; opacity:0; }
 /* no will-change here on purpose: it would promote every one of the 125
    character spans to its own compositing layer */
 .ch{ opacity:0; }

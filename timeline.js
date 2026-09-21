@@ -112,35 +112,47 @@ const EFFECTS = {
 
   walk(el, cue, t0){
     const { frames, manifest } = el._walk;
-    const spf = 1000 / manifest.fps;
+    const spf  = 1000 / manifest.fps;
+    const last = manifest.count - 1;
     el._t0 = t0; el._tEnd = t0 + manifest.count * spf;   // for verification
     const ctx = el.getContext('2d');
-    const x0 = manifest.x[0];
+    const x0  = manifest.x[0];
+    let shown = -1;                       // the frame currently on the canvas
+
     const draw = i => {
       // frames arrive progressively; if this one has not landed yet, hold the
       // most recent one that has rather than blanking the mascot
-      let f = frames[i];
-      for (let k = i; !f && k >= 0; k--) f = frames[k];
+      let f = frames[i], from = i;
+      for (; !f && from >= 0; from--) f = frames[from];
       ctx.clearRect(0, 0, el.width, el.height);
       if (f) ctx.drawImage(f, 0, 0, el.width, el.height);
       // transform rather than `left`: it composites, and it never asks the
       // page for a layout on a frame the mascot is mid-stride
       el.style.transform = `translateX(${(manifest.x[i] - x0).toFixed(2)}px)`;
+      shown = i;
+      return f === frames[i];            // false if we had to fall back
     };
     draw(0);
     // it fades up as it enters, instead of arriving at full strength
     el.animate([{ opacity: 0 }, { opacity: 1 }],
       { ...FILL, delay: t0, duration: ms(cue.fade || '--walk-fade'),
         easing: tok(cue.ease || '--ease-cross') });
-    setTimeout(() => {
-      const start = performance.now();
-      const tick = now => {
-        const i = Math.min(manifest.count - 1, Math.floor((now - start) / spf));
-        draw(i);
-        if (i < manifest.count - 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }, t0);
+
+    // driven from the timeline's own origin, so an imprecise setTimeout cannot
+    // leave the mascot walking after the moment it was supposed to arrive
+    const startAt = ORIGIN + t0;
+    const tick = now => {
+      const i = Math.min(last, Math.max(0, Math.floor((now - startAt) / spf)));
+      // only repaint when the frame actually changes: at 24fps against a 120Hz
+      // display this was clearing and redrawing the sprite five times per frame
+      if (i !== shown){
+        const exact = draw(i);
+        // if the final frame had not arrived yet, come back for it
+        if (i === last && !exact) frames[last] ? draw(last) : setTimeout(() => draw(last), 250);
+      }
+      if (i < last) requestAnimationFrame(tick);
+    };
+    setTimeout(() => requestAnimationFrame(tick), t0);
     return t0 + manifest.count * spf;
   },
 
@@ -162,7 +174,10 @@ const EFFECTS = {
    anchored to the end of another cue), then fire them all at once.
 ---------------------------------------------------------------- */
 
+let ORIGIN = 0;
+
 function runTimeline(board, els){
+  ORIGIN = performance.now();     // every cue is measured from this instant
   const ends = {};
 
   // a cue's offset may be a function of the tokens and of an asset's own
