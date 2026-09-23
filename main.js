@@ -3,7 +3,7 @@
    viewport, run the timeline, wire the hover-only switcher.
 ---------------------------------------------------------------- */
 
-const HOLD = 3600;   // how long a phrase sits at the centre of the cycler
+const HOLD = 3130;   // how long a phrase sits at the centre of the cycler (15% faster)
 
 const px = v => v + 'px';
 const stage = document.getElementById('stage');
@@ -72,15 +72,24 @@ async function loadWalk(base){
   // decoded decodes on its first drawImage — which is exactly when the walk
   // starts, and is what made its opening stutter.
   const frames = new Array(manifest.count).fill(null);
-  const load = i => {
+  const load = i => new Promise(res => {
     const im = new Image();
+    // onload, not decode(), as the readiness signal: decode() does not settle
+    // in a backgrounded document, which would leave the board blank. decode()
+    // is still called, but only as a hint, so the first drawImage of a frame
+    // does not have to decode it mid-walk.
+    im.onload  = () => { frames[i] = im; im.decode && im.decode().catch(() => {}); res(); };
+    im.onerror = () => res();
     im.src = `${base}f${String(i).padStart(3, '0')}.webp`;
-    return im.decode().then(() => { frames[i] = im; }).catch(() => {});
-  };
+  });
 
-  const HEAD_START = Math.min(24, manifest.count);   // ~1s of walking
-  await Promise.all(Array.from({ length: HEAD_START }, (_, i) => load(i)));
-  for (let i = HEAD_START; i < manifest.count; i++) load(i);   // not awaited
+  // A head start means the walk opens smoothly, but it must never be a
+  // precondition for the board appearing — a stalled or slow image would
+  // otherwise hold the whole page blank. Whichever comes first wins.
+  const HEAD_START = Math.min(24, manifest.count);          // ~1s of walking
+  const started = Promise.all(Array.from({ length: HEAD_START }, (_, i) => load(i)));
+  for (let i = HEAD_START; i < manifest.count; i++) load(i);
+  await Promise.race([started, new Promise(r => setTimeout(r, 1500))]);
 
   return { manifest, frames };
 }
@@ -182,7 +191,7 @@ function cyclerStack(node){
 
   const ease  = token('--ease-throw');
   const dur   = tokenMs('--dur-cycle');
-  const STEP  = 22;                            // one line-height
+  const STEP  = parseFloat(token('--row-h'));  // one line-height, from the token
   const BLEED = parseFloat(token('--stack-bleed'));   // the soft margin above row 1
   let step = 0;
 

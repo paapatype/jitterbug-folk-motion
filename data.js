@@ -14,13 +14,18 @@ const COPY = {
            '<b>hello@jitterbugfolk.com</b>',
   // board 2's frame sets the address in red at medium weight, not bold black
   contactV2: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
-             '<span class="email">hello@jitterbugfolk.com</span>'
+             '<span class="email">hello@jitterbugfolk.com</span>',
+  // board 2's frame sets the brand name in the accent red, and the paragraph larger
+  reimaginesV2: '<span class="brand">Jitterbug Folk</span> reimagines word of mouth, bridging the gap ' +
+                'between founders and freelancers. Think of it as a potluck of vetted freelancers, ' +
+                'brought together to form tailored teams for clients.'
 };
 
 /* The rolling phrase list. "Tailored Teams" is spelled as the Figma
    frame spells it; "Brand Bugs" and "Social Bugs" are additions that
    only exist in the motion, not in the static frames. */
-const PHRASES = ['Trusted Talent', 'Tailored Teams', 'Non-Agency Setup', 'Brand Bugs', 'Social Bugs'];
+const PHRASES = ['Trusted Talent', 'Tailored Teams', 'Non-Agency Setup', 'Brand Bugs', 'Social Bugs',
+                 'STORYBUGS', 'DESIGNBUGS'];
 
 /* Board 1's slot is two lines tall and centred, so its phrases carry
    their own break to match the frame's "Trusted / Talent" setting. */
@@ -88,16 +93,16 @@ const BOARDS = {
                        html:'<b>' + COPY.headline.replace('<b-end> ','</b><br>'),
                        x:116, y:149, w:620, h:321 },
 
-      { id:'about',    kind:'text', cls:'t', html:COPY.reimagines,
-                       x:116, y:782, w:552, h:127 },
+      { id:'about',    kind:'text', cls:'t lg', html:COPY.reimaginesV2,
+                       x:116, y:782, w:619, h:127 },
 
       // the frame's three rows live at y 787-853; the box is extended by one
       // row above and below as soft margin for the rows entering and leaving
       { id:'cycler',   kind:'cycler', mode:'stack', phrases:PHRASES,
-                       cls:'t', x:833, y:760, w:200, h:110 },
+                       cls:'t', x:846, y:756, w:210, h:130 },
 
-      { id:'contact',  kind:'text', cls:'t', html:COPY.contactV2,
-                       x:1052, y:782, w:345, h:66 }
+      { id:'contact',  kind:'text', cls:'t loose', html:COPY.contactV2,
+                       x:1052, y:782, w:345, h:78 }
     ],
 
     timeline: [

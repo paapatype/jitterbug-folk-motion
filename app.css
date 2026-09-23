@@ -14,8 +14,9 @@
   --stagger-line: 260ms;
 
   /* the phrase cycler runs on its own, slower clock */
-  --dur-cycle:   1300ms;   /* board 2: one row travelling one step */
-  --stack-bleed: 22px;     /* one row of soft margin above and below the stack window */
+  --dur-cycle:   1130ms;   /* board 2: one row travelling one step (15% faster) */
+  --row-h:       26px;     /* one row of the stack, from the frame's 26px leading */
+  --stack-bleed: 26px;     /* one row of soft margin above and below the window */
 
   /* board 1 — letters leave and arrive one at a time, never overlapping */
   --dur-letter:      700ms;  /* one letter's exit, or its entry */
@@ -49,12 +50,12 @@
   --row-wght-in:     500;    /* the arriving row now carries the leaving row's
                                 weight, so the two grey rows match */
   --row-wght-out:    500;
+  --row-wght-on:     800;    /* Alegreya ExtraBold at the centre */
 
   /* frame palette, read from Figma */
   --ink:    #000000;
   --grey:   #979797;
   --paper:  #FFFFFF;
-  --email:  var(--ink);
   /* the letterforms' colour. The j/b/f SVGs are filled with currentColor and
      inlined, so this token is the only place the colour is written down. */
   --letter: #371117;
@@ -65,7 +66,7 @@
 body.board-2{
   --paper:  #FFFAEB;
   --letter: #610809;
-  --email:  #E2000E;
+  --accent: #E2000E;
 
   --frame-w: 1512px;
   --frame-h: 982px;
@@ -119,7 +120,10 @@ html, body{
 }
 .t.lead{ font-size:47px; line-height:55px; }
 .t b{ font-weight:700; font-variation-settings:"wdth" 100; }
-.t .email{ color: var(--email); font-weight:500; font-variation-settings:"wdth" 100; }
+.t .email{ color: var(--accent); font-weight:700; font-variation-settings:"wdth" 100; }
+.t .brand{ color: var(--accent); font-weight:700; font-variation-settings:"wdth" 100; }
+.t.lg{ font-size:19px; line-height:26px; }
+.t.loose{ line-height:26px; }
 
 /* DISPLAY FACE ---------------------------------------------------
    The frame sets this phrase in JejuHallasan, which is not
@@ -175,8 +179,12 @@ html, body{
   position:absolute; left:0; top:0; width:100%;
   will-change:transform;
 }
+.cycler-stack{
+  font-family:'Alegreya', Georgia, serif;   /* the frame sets the stack in a serif */
+  font-size:17px;
+}
 .cycler-stack .row{
-  height:22px; line-height:22px;
+  height:var(--row-h); line-height:var(--row-h);
   white-space:nowrap;
   /* A row strengthens as it climbs: fainter and lighter at the bottom, black
      and bold at the centre, easing back toward grey on its way out. Opacity,
@@ -184,7 +192,7 @@ html, body{
      they land together instead of reading as three separate steps. */
   opacity:0;
   color: var(--grey-ramp);
-  font-variation-settings:"wdth" 100, "wght" var(--row-wght-in);
+  font-variation-settings:"wght" var(--row-wght-in);
   transition: opacity var(--dur-cycle) var(--ease-throw),
               color var(--dur-cycle) var(--ease-throw),
               font-variation-settings var(--dur-cycle) var(--ease-throw);
@@ -194,12 +202,12 @@ html, body{
 }
 .cycler-stack .row.pos-out{                /* above the centre, leaving */
   opacity: var(--row-opacity-out);
-  font-variation-settings:"wdth" 100, "wght" var(--row-wght-out);
+  font-variation-settings:"wght" var(--row-wght-out);
 }
 .cycler-stack .row.is-active{              /* the centre line */
   opacity: 1;
   color: var(--ink);
-  font-variation-settings:"wdth" 100, "wght" 700;
+  font-variation-settings:"wght" var(--row-wght-on);
 }
 
 /* the mascot's walk-in: a canvas so the matte composites over the b behind it */
