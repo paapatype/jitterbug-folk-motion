@@ -24,8 +24,8 @@ const COPY = {
 /* The rolling phrase list. "Tailored Teams" is spelled as the Figma
    frame spells it; "Brand Bugs" and "Social Bugs" are additions that
    only exist in the motion, not in the static frames. */
-const PHRASES = ['Trusted Talent', 'Tailored Teams', 'Non-Agency Setup', 'Brand Bugs', 'Social Bugs',
-                 'STORYBUGS', 'DESIGNBUGS'];
+const PHRASES = ['Trusted Talent', 'Tailored Teams', 'Non-Agency Setup',
+                 'BrandBugs', 'SocialBugs', 'StoryBugs', 'DesignBugs'];
 
 /* Board 1's slot is two lines tall and centred, so its phrases carry
    their own break to match the frame's "Trusted / Talent" setting. */
