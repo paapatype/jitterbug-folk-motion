@@ -8,6 +8,16 @@ const HOLD = 3130;   // how long a phrase sits at the centre of the cycler (15% 
 const px = v => v + 'px';
 const stage = document.getElementById('stage');
 
+/* The build stamp index.html carries on its own assets, reused for everything
+   fetched at run time — the frames and the letterforms are on the same
+   ten-minute cache as the code, and a new build must not be served old art. */
+const BUILD_ID = (() => {
+  const s = [...document.querySelectorAll('script[src]')].map(e => e.src).find(u => u.includes('main.js'));
+  const m = s && s.match(/[?&]b=([^&]+)/);
+  return m ? m[1] : '';
+})();
+const bust = url => BUILD_ID ? url + (url.includes('?') ? '&' : '?') + 'b=' + BUILD_ID : url;
+
 const ROOT = getComputedStyle(document.documentElement);
 const token = n => ROOT.getPropertyValue(n).trim();
 const tokenMs = n => parseFloat(token(n));
@@ -55,14 +65,14 @@ const BUILD = {
    picks up --letter and the colour lives in exactly one place */
 async function loadTints(nodes){
   await Promise.all(nodes.filter(n => n.tint).map(async n => {
-    n._svg = await fetch(n.src).then(r => r.text());
+    n._svg = await fetch(bust(n.src)).then(r => r.text());
   }));
 }
 
 /* the footage, matted, as a frame sequence plus the geometry that lands its
    settled pose exactly on the mascot's Figma box */
 async function loadWalk(base){
-  const manifest = await fetch(base + 'walk.json').then(r => r.json());
+  const manifest = await fetch(bust(base + 'walk.json')).then(r => r.json());
   // The frames are ~5MB in total. Awaiting all of them before building the
   // board left the page blank for as long as the download took — invisible on
   // localhost, ten to forty seconds over the network. So: take a head start of
@@ -80,7 +90,7 @@ async function loadWalk(base){
     // does not have to decode it mid-walk.
     im.onload  = () => { frames[i] = im; im.decode && im.decode().catch(() => {}); res(); };
     im.onerror = () => res();
-    im.src = `${base}f${String(i).padStart(3, '0')}.webp`;
+    im.src = bust(`${base}f${String(i).padStart(3, '0')}.webp`);
   });
 
   // A head start means the walk opens smoothly, but it must never be a
