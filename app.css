@@ -131,8 +131,8 @@ html, body{
 .t.loose{ line-height:26px; }
 
 /* phone type, from frame 161:314 */
-.t.m-head{ font-size:20px; line-height:28px; }
-.t.m-body{ font-size:14px; line-height:22px; }
+.t.m-head{ font-size:20px; line-height:28px; text-align:center; }
+.t.m-body{ font-size:14px; line-height:22px; text-align:center; }
 .t.m-contact{ font-size:14px; line-height:23px; text-align:center; white-space:nowrap; }
 
 /* DISPLAY FACE ---------------------------------------------------
