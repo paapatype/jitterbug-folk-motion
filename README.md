@@ -236,6 +236,14 @@ the `b` behind it, and `EFFECTS.walk` in `timeline.js` plays the frames while
 moving the sprite to each frame's board x. The walk ends holding the settled
 frame, so there is no handoff to a second element and nothing to cross-dissolve.
 
+**The artwork and the position run on separate clocks.** The frames step at the
+footage's own cadence, but the sprite's x glides between one frame's position
+and the next on every display frame. Driving x off the frame index meant it
+moved only when the artwork did — fine at a flat 24fps, but the settle holds the
+last frames for 55, 86 then 119ms, so the mascot jumped position eight times a
+second and read as stepping rather than walking. Measured over the final 1.5s:
+18 artwork repaints against 89 position updates, largest single step 2.6px.
+
 Three things keep its opening smooth:
 
 * frames are preloaded with **`img.decode()`**, not `onload`. A loaded but

@@ -137,20 +137,34 @@ const EFFECTS = {
     const x0  = manifest.x[0];
     let shown = -1;                       // the frame currently on the canvas
 
-    const draw = i => {
+    // the artwork, on the footage's own cadence
+    const paint = i => {
       // frames arrive progressively; if this one has not landed yet, hold the
       // most recent one that has rather than blanking the mascot
       let f = frames[i], from = i;
       for (; !f && from >= 0; from--) f = frames[from];
       ctx.clearRect(0, 0, el.width, el.height);
       if (f) ctx.drawImage(f, 0, 0, el.width, el.height);
-      // transform rather than `left`: it composites, and it never asks the
-      // page for a layout on a frame the mascot is mid-stride
-      el.style.transform = `translateX(${(manifest.x[i] - x0).toFixed(2)}px)`;
       shown = i;
       return f === frames[i];            // false if we had to fall back
     };
-    draw(0);
+
+    /* The position, on the display's cadence — deliberately separate.
+
+       Driving the sprite's x off the frame index meant it moved only when the
+       artwork did. That is fine at a flat 24fps, but the settle above holds the
+       last frames for 55, 86, then 119ms, so the mascot was jumping position
+       eight times a second and read as stepping rather than walking. It now
+       glides between one frame's position and the next, so the travel is
+       continuous however long a frame is held. `transform` composites, and
+       never asks the page for a layout mid-stride. */
+    const place = (i, frac) => {
+      const a = manifest.x[i];
+      const b = i < last ? manifest.x[i + 1] : a;
+      el.style.transform = `translateX(${(a + (b - a) * frac - x0).toFixed(2)}px)`;
+    };
+
+    paint(0); place(0, 0);
     // it fades up as it enters, instead of arriving at full strength
     el.animate([{ opacity: 0 }, { opacity: 1 }],
       { ...FILL, delay: t0, duration: ms(cue.fade || '--walk-fade'),
@@ -163,13 +177,19 @@ const EFFECTS = {
       const e = now - startAt;
       let i = Math.max(0, shown);
       while (i < last && times[i + 1] <= e) i++;
-      // only repaint when the frame actually changes: at 24fps against a 120Hz
+
+      // repaint only when the frame actually changes: at 24fps against a 120Hz
       // display this was clearing and redrawing the sprite five times per frame
       if (i !== shown){
-        const exact = draw(i);
+        const exact = paint(i);
         // if the final frame had not arrived yet, come back for it
-        if (i === last && !exact) frames[last] ? draw(last) : setTimeout(() => draw(last), 250);
+        if (i === last && !exact) frames[last] ? paint(last) : setTimeout(() => paint(last), 250);
       }
+
+      // but reposition every frame the display gives us
+      const span = i < last ? times[i + 1] - times[i] : 1;
+      place(i, i < last ? Math.min(1, Math.max(0, (e - times[i]) / span)) : 1);
+
       if (i < last) requestAnimationFrame(tick);
     };
     setTimeout(() => requestAnimationFrame(tick), t0);
