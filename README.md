@@ -169,9 +169,9 @@ hardcoded — a cue's `at` may be a function receiving `{ ms, walkMs }`.
 
 Board 1's cues are untouched: it keeps `--dur-glyph` and the 0/180/360 stagger.
 
-Note the walk plus its lead (3.71s x 1.35 = 5.0s) has to fit inside the headline
-reveal, which is 6.26s. Raising `--walk-lead` much further, or shortening the
-reveal, would need the mascot to start before the board does.
+Note the walk (4.58s) plus its 1.25s head start has to fit inside the headline
+reveal, which is 6.26s. Lengthening `--walk-settle` much further, or shortening
+the reveal, would push the mascot's arrival past the moment the letters land.
 
 ## The phone layout (board 2 only)
 
