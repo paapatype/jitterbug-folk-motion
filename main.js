@@ -46,7 +46,9 @@ const BUILD = {
   },
 
   cycler(node){
-    return node.mode === 'single' ? cyclerSingle(node) : cyclerStack(node);
+    if (node.mode === 'single') return cyclerSingle(node);
+    if (node.mode === 'slide')  return cyclerSlide(node);
+    return cyclerStack(node);
   },
 
   walk(node){
@@ -178,6 +180,45 @@ function cyclerSingle(node){
   return box;
 }
 
+/* phone — a horizontal slide carrying the whole list.
+   No window, no ramp, no highlighted centre: the phone frame shows every entry
+   the same. The track holds the list twice and travels exactly one list-width,
+   so the wrap lands on an identical arrangement and cannot be seen. */
+function cyclerSlide(node){
+  const box = document.createElement('div');
+  box.className = 'cycler-slide';
+  const track = document.createElement('div');
+  track.className = 'track';
+  box.appendChild(track);
+
+  for (let copy = 0; copy < 2; copy++){
+    for (const text of node.phrases){
+      const s = document.createElement('span');
+      s.className = 'item';
+      s.textContent = text;
+      track.appendChild(s);
+    }
+  }
+
+  const gap   = parseFloat(token('--m-ticker-gap'));
+  const speed = parseFloat(token('--m-ticker-speed'));   // board px per second
+
+  box._start = delay => {
+    const n = node.phrases.length;
+    const items = [...track.children];
+    // offsetWidth is the untransformed layout width, so this is in board px
+    let period = gap * n;
+    for (let i = 0; i < n; i++) period += items[i].offsetWidth;
+    track.animate(
+      [{ transform: 'translateX(0px)' },
+       { transform: `translateX(${-period}px)` }],
+      { duration: period / speed * 1000, iterations: Infinity,
+        easing: 'linear', delay });
+  };
+
+  return box;
+}
+
 /* board 2 — three-line stack rolling up, centre line black */
 function cyclerStack(node){
   const box = document.createElement('div');
@@ -247,11 +288,23 @@ function cyclerStack(node){
 
 /* ---------- build + run ---------------------------------------- */
 
-function buildBoard(key){
-  const board = BOARDS[key];
+const PHONE_MAX = 700;      // viewport width at or below which phone applies
+let FRAME_W = 1512, FRAME_H = 982;
+
+function layoutFor(v){
+  const board = BOARDS[v];
+  // ?m=1 forces the phone layout at any width, for previewing it on a desktop
+  const forced = new URLSearchParams(location.search).get('m') === '1';
+  const onPhone = !!board.phone && (forced || window.innerWidth <= PHONE_MAX);
+  return onPhone
+    ? { board, nodes: board.phone.nodes, w: board.phone.w, h: board.phone.h, phone: true }
+    : { board, nodes: board.nodes, w: 1512, h: 982, phone: false };
+}
+
+function buildBoard(board, nodes){
   const els = {};
 
-  for (const node of board.nodes){
+  for (const node of nodes){
     if (node.kind === 'walk'){                  // manifest supplies the box
       const m = node._manifest;
       node.x = m.x[0]; node.y = m.boardY; node.w = m.width; node.h = m.height;
@@ -270,7 +323,7 @@ function buildBoard(key){
 }
 
 function fit(){
-  const s = Math.min(window.innerWidth / 1512, window.innerHeight / 982);
+  const s = Math.min(window.innerWidth / FRAME_W, window.innerHeight / FRAME_H);
   stage.style.transform = `scale(${s})`;
 }
 
@@ -311,17 +364,23 @@ function wireSwitcher(current){
   document.title = `Jitterbug Folk — board ${v}`;
   document.body.classList.add('board-' + v);      // board-scoped colour tokens
 
-  await loadTints(BOARDS[v].nodes);
+  const view = layoutFor(v);
+  FRAME_W = view.w; FRAME_H = view.h;
+  stage.style.width  = FRAME_W + 'px';
+  stage.style.height = FRAME_H + 'px';
+  if (view.phone) document.body.classList.add('phone');
 
-  // the mascot's walk, if this board uses one
-  for (const node of BOARDS[v].nodes){
+  await loadTints(view.nodes);
+
+  // the mascot's walk, if this layout uses one
+  for (const node of view.nodes){
     if (node.kind === 'walk'){
       const { manifest, frames } = await loadWalk(node.src);
       node._manifest = manifest; node._frames = frames;
     }
   }
 
-  const { board, els } = buildBoard(v);
+  const { board, els } = buildBoard(view.board, view.nodes);
   fit();
   window.addEventListener('resize', fit);
   wireSwitcher(v);

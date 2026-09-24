@@ -15,6 +15,9 @@ const COPY = {
   // board 2's frame sets the address in red at medium weight, not bold black
   contactV2: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
              '<span class="email">hello@jitterbugfolk.com</span>',
+  // the phone frame ends this line with a full stop; the desktop one does not
+  contactM: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need.<br>' +
+            '<span class="email">hello@jitterbugfolk.com</span>',
   // board 2's frame sets the brand name in the accent red, and the paragraph larger
   reimaginesV2: '<span class="brand">Jitterbug Folk</span> reimagines word of mouth, bridging the gap ' +
                 'between founders and freelancers. Think of it as a potluck of vetted freelancers, ' +
@@ -123,6 +126,36 @@ const BOARDS = {
       // "Freelancer? ..." then "Building a brand? ..." land after the
       // left-hand paragraph has finished, continuing the same cascade
       { kind:'lines',  target:'contact',  after:'about',    at: 0 }
-    ]
+    ],
+
+    /* The phone layout of the same board — node ids and the timeline above are
+       shared, so every cue applies unchanged. Only the geometry differs, plus
+       the ticker, which is a horizontal slide here rather than a vertical
+       selector. Frame 161:314, "iPhone 16 & 17 Pro", 402x874. */
+    phone: {
+      w: 402, h: 874,
+      nodes: [
+        // paint order as in the frame: b, creature, j, f
+        { id:'b',        kind:'svg',  src:'assets/b.svg', x:149.91, y:226.00, w: 83.38, h:125.59, tint:true },
+        { id:'creature', kind:'walk', src:'assets/walk-m/' },
+        { id:'j',        kind:'svg',  src:'assets/j.svg', x: 83.00, y:236.29, w: 42.21, h:216.18, tint:true },
+        { id:'f',        kind:'svg',  src:'assets/f.svg', x:223.00, y:250.71, w: 63.82, h:136.91, tint:true },
+
+        { id:'headline', kind:'text', cls:'t m-head',
+                         html:'<b>' + COPY.headline.replace('<b-end> ','</b><br>'),
+                         x:40, y:40, w:322, h:129 },
+
+        { id:'about',    kind:'text', cls:'t m-body', html:COPY.reimaginesV2,
+                         x:64, y:540, w:281, h:124 },
+
+        // a full-width strip: the entries slide through it and run off both edges
+        { id:'cycler',   kind:'cycler', mode:'slide', phrases:PHRASES,
+                         cls:'t', x:0, y:690, w:402, h:29 },
+
+        // the frame centres this block on x192, so a 384-wide box at x0 lands it
+        { id:'contact',  kind:'text', cls:'t m-contact', html:COPY.contactM,
+                         x:0, y:753, w:384, h:69 }
+      ]
+    }
   }
 };

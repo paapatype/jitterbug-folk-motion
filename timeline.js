@@ -160,7 +160,7 @@ const EFFECTS = {
     const d = ms(cue.dur || '--dur-fade');
     // the stacked cycler fades in as a block; the single one is carried
     // in by its first phrase, so fading the box too would double up
-    if (el.classList.contains('cycler-stack')){
+    if (el.classList.contains('cycler-stack') || el.classList.contains('cycler-slide')){
       el.animate([{ opacity: 0 }, { opacity: 1 }],
         { ...FILL, delay: t0, duration: d, easing: tok(cue.ease || '--ease-cross') });
     }

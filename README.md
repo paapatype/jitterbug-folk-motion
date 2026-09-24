@@ -164,6 +164,45 @@ Note the walk plus its lead (3.71s x 1.35 = 5.0s) has to fit inside the headline
 reveal, which is 6.26s. Raising `--walk-lead` much further, or shortening the
 reveal, would need the mascot to start before the board does.
 
+## The phone layout (board 2 only)
+
+A viewport of **700px or less** gets board 2 laid out for phone, from frame
+`161:314`, **402x874**. Board 1 has no phone layout and is untouched at every
+width. Append **`?m=1`** to force the phone layout at any width — useful for
+looking at it on a desktop.
+
+It is the same board: the node ids and the whole timeline are shared, so every
+cue applies unchanged and the choreography is identical. Only geometry differs —
+plus the ticker, which is a different component here.
+
+`index.html` carries a **viewport meta tag**. Without it a phone lays the page
+out at ~980px, `innerWidth` never drops to the device width, and the phone
+layout would never apply.
+
+    headline   40, 40   322x129    20/28
+    lockup     83, 226  236.76x280
+    paragraph  64, 540  281x124    14/22
+    ticker     y 690               Alegreya Medium 17px, #777
+    contact    centred on x192, y753, 14/23, centred and nowrap
+
+### The ticker slides sideways here
+
+On desktop it is a three-row vertical window with a black centre. On phone it is
+a horizontal slider carrying all seven entries at the same weight and the same
+`#777` — no window, no ramp, no highlighted centre.
+
+The track holds the list **twice** and travels exactly one list-width, so the
+wrap lands on an identical arrangement and cannot be seen. It is driven by
+`transform` at `--m-ticker-speed` board px per second, with `--m-ticker-gap`
+between entries.
+
+### Its own sprite set
+
+`assets/walk-m/` — the same 89 frames registered to the phone's creature box and
+exported at 410x498, **3.31MB** against the desktop set's 6.30MB. The mascot
+shows at about 196px wide here, so serving the desktop sprites would be four
+times the data for no visible gain.
+
 ## The mascot's walk-in (board 2 only)
 
 On board 2 the mascot walks in from the right edge instead of fading in, and its
