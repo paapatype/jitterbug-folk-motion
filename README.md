@@ -73,8 +73,12 @@ Board 2's headline reveal:
 
     --headline-dur    1400ms  one word of the headline fading up
     --headline-step   180ms   between words
-    --walk-lead       0.35    how much of its own length earlier the mascot sets off
-    --walk-fade       1600ms  the mascot crossfading in as it enters
+    --walk-start-before 5006ms  when the mascot sets off, before the headline ends
+    --walk-settle       0.35    the share of frames that stretch at the end
+    --walk-settle-max   3       how much longer the final frame is held
+    --walk-fade         1600ms  the mascot crossfading in as it enters
+    --dur-glyph-2       1620ms  board 2's lockup, 35% slower than board 1's
+    --m-ticker-fade     56px    the gradient at each end of the phone ticker
 
 Colour is **board-scoped**: `:root` holds board 1's values and `body.board-2`
 overrides them, because the two boards now have different frames.
@@ -142,23 +146,28 @@ wash rather than a row of separate events. Total 6.26s.
 ## Board 2's running order
 
     headline reveal      0 - 6.26s
-    mascot walks in   1.25 - 4.96s
-    j, b, f           4.70 - 6.26s
+    mascot walks in   1.25 - 5.84s
+    j, b, f           4.15 - 6.26s
 
 The lockup is placed backwards from the headline's end by
-`GLYPH_LAST + --dur-glyph`, so `f` — the last of the three — settles exactly as
-the last word lands.
+`GLYPH_LAST_2 + --dur-glyph-2`, so `f` — the last of the three — settles exactly
+as the last word lands.
 
-The mascot is placed backwards from that same end by its own length and then
-**`--walk-lead` earlier again**: at 0.35 it sets off 35% of the walk sooner, so
-it arrives about 1.3s before the headline finishes and stands while the letters
-complete the lockup. Set `--walk-lead` to 0 to make all three converge instead.
+The mascot sets off `--walk-start-before` ahead of that same end — anchored by
+its START, so lengthening its settle extends the ending rather than moving the
+beginning. Its last third of frames are held progressively longer
+(`--walk-settle`, `--walk-settle-max`): 41.7ms each through frame 57, then 55ms,
+86ms, and 119ms on the last — held almost three times as long — so it decelerates
+into its final pose instead of walking at full pace and stopping dead. The walk
+runs 4.58s rather than 3.71s, all of the difference in the tail.
 
+Board 2's lockup runs on `--dur-glyph-2`, 1620ms against board 1's 1200ms, with
+its stagger stretched by the same 1.35 so the rhythm between j, b and f is
+unchanged and only its pace is slower.
 Both offsets are functions of the tokens and of `walk.json`, so nothing is
 hardcoded — a cue's `at` may be a function receiving `{ ms, walkMs }`.
 
-`j`, `b` and `f` keep their own 0/180/360 stagger; only the group's start moves.
-Board 1's cues are untouched.
+Board 1's cues are untouched: it keeps `--dur-glyph` and the 0/180/360 stagger.
 
 Note the walk plus its lead (3.71s x 1.35 = 5.0s) has to fit inside the headline
 reveal, which is 6.26s. Raising `--walk-lead` much further, or shortening the

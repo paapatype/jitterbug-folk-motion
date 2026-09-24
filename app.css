@@ -10,6 +10,7 @@
   --ease-entry:  cubic-bezier(0.22, 1, 0.36, 1);
   --ease-cross:  cubic-bezier(0.4, 0.0, 0.2, 1);
   --dur-glyph:   1200ms;
+  --dur-glyph-2: 1620ms;     /* board 2's lockup arrives 35% slower than board 1's */
   --dur-fade:    900ms;
   --stagger-line: 260ms;
 
@@ -37,8 +38,13 @@
                                 about eight are always mid-fade and the reveal
                                 is a wash rather than a row of separate events */
 
-  --walk-lead:      0.35;    /* the mascot sets off this much of its own length
-                                earlier than the beat it would otherwise meet */
+  /* when the mascot sets off, measured back from the end of the headline.
+     Anchoring the START (rather than deriving it from the walk's length) means
+     stretching the walk's tail lengthens its ending instead of shifting its
+     beginning — which is the point of the settle below. */
+  --walk-start-before: 5006ms;
+  --walk-settle:       0.35;  /* the last third of the frames stretch out */
+  --walk-settle-max:   3;     /* the final frame runs this much longer */
   --walk-fade:      1600ms;  /* it crossfades in as it enters, rather than
                                 appearing at full strength at the right edge */
 
@@ -46,6 +52,7 @@
   --m-ticker-gap:   22px;    /* between entries in the sliding ticker */
   --m-ticker-speed: 32;      /* board px per second, left */
   --m-grey:         #777;    /* the frame's ticker grey */
+  --m-ticker-fade:  56px;    /* entries dissolve over this much at each end */
 
   /* board 2 — the ramp a row climbs as it travels to the centre */
   --ease-throw:      cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -227,7 +234,17 @@ html, body{
    No window, no weight ramp and no highlighted centre — every entry is the
    same on phone. The track carries the list twice and is translated by
    exactly one list-width, so the wrap lands on an identical arrangement. */
-.cycler-slide{ overflow:hidden; }
+/* the entries dissolve at both ends rather than being cut by the frame edge */
+.cycler-slide{
+  overflow:hidden;
+  --m: linear-gradient(to right,
+        transparent 0,
+        #000 var(--m-ticker-fade),
+        #000 calc(100% - var(--m-ticker-fade)),
+        transparent 100%);
+  -webkit-mask-image: var(--m);
+          mask-image: var(--m);
+}
 .cycler-slide .track{
   position:absolute; left:0; top:0;
   display:flex; align-items:flex-start;

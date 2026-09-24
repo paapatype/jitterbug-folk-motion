@@ -114,7 +114,25 @@ const EFFECTS = {
     const { frames, manifest } = el._walk;
     const spf  = 1000 / manifest.fps;
     const last = manifest.count - 1;
-    el._t0 = t0; el._tEnd = t0 + manifest.count * spf;   // for verification
+
+    /* A time for every frame, rather than a constant rate. The last stretch of
+       frames is held progressively longer, so the mascot decelerates into its
+       final pose instead of walking at full pace and stopping dead. The
+       footage already slows its own stride at the end; this lets the playback
+       agree with it. */
+    const tailN = Math.max(2, Math.round(manifest.count * parseFloat(tok(cue.settle || '--walk-settle'))));
+    const tailK = parseFloat(tok(cue.settleMax || '--walk-settle-max'));
+    const times = new Array(manifest.count);
+    let clock = 0;
+    for (let i = 0; i < manifest.count; i++){
+      times[i] = clock;
+      const into = i - (manifest.count - tailN);
+      const k = into > 0 ? into / (tailN - 1) : 0;      // 0 until the tail, then 0..1
+      clock += spf * (1 + (tailK - 1) * k * k);
+    }
+    const total = clock;
+
+    el._t0 = t0; el._tEnd = t0 + total;   // for verification
     const ctx = el.getContext('2d');
     const x0  = manifest.x[0];
     let shown = -1;                       // the frame currently on the canvas
@@ -142,7 +160,9 @@ const EFFECTS = {
     // leave the mascot walking after the moment it was supposed to arrive
     const startAt = ORIGIN + t0;
     const tick = now => {
-      const i = Math.min(last, Math.max(0, Math.floor((now - startAt) / spf)));
+      const e = now - startAt;
+      let i = Math.max(0, shown);
+      while (i < last && times[i + 1] <= e) i++;
       // only repaint when the frame actually changes: at 24fps against a 120Hz
       // display this was clearing and redrawing the sprite five times per frame
       if (i !== shown){
@@ -153,7 +173,7 @@ const EFFECTS = {
       if (i < last) requestAnimationFrame(tick);
     };
     setTimeout(() => requestAnimationFrame(tick), t0);
-    return t0 + manifest.count * spf;
+    return t0 + total;
   },
 
   cycler(el, cue, t0){

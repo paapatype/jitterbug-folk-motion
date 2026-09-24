@@ -43,6 +43,13 @@ const GLYPH_IN = [
 // when the last of the three starts, relative to the first
 const GLYPH_LAST = Math.max(...GLYPH_IN.map(g => g.at));
 
+// Board 2's lockup arrives more slowly than board 1's: the stagger is stretched
+// by the same factor as --dur-glyph-2 is against --dur-glyph, so the rhythm
+// between the three letters is unchanged, only its pace.
+const GLYPH_SLOW  = 1.35;
+const GLYPH_IN_2  = GLYPH_IN.map(g => ({ ...g, at: Math.round(g.at * GLYPH_SLOW) }));
+const GLYPH_LAST_2 = Math.max(...GLYPH_IN_2.map(g => g.at));
+
 const BOARDS = {
   /* =============================== BOARD 1 =============================== */
   '1': {
@@ -114,13 +121,15 @@ const BOARDS = {
       // The three openings converge. The mascot sets off while the headline is
       // still revealing, timed backwards from the headline's end by the walk's
       // own length, so it arrives exactly as the last words land.
+      // The mascot sets off a fixed time before the headline ends, so lengthening
+      // its settle extends the ending rather than moving the start earlier.
       { kind:'walk',   target:'creature', after:'headline',
-                       at: c => -c.walkMs('creature') * (1 + c.ms('--walk-lead')) },
-      // and the lockup lands on that same beat: the group spans
-      // GLYPH_LAST + --dur-glyph, so f, the last of the three, settles with them.
-      ...GLYPH_IN.map(g => ({ kind:'glyph', target:g.id, after:'headline',
-                              at: c => g.at - (GLYPH_LAST + c.ms('--dur-glyph')),
-                              dur:'--dur-glyph', from:g.from, ease:'--ease-entry' })),
+                       at: c => -c.ms('--walk-start-before') },
+      // and the lockup lands on the headline's last word: the group spans
+      // GLYPH_LAST_2 + --dur-glyph-2, so f, the last of the three, settles with it.
+      ...GLYPH_IN_2.map(g => ({ kind:'glyph', target:g.id, after:'headline',
+                              at: c => g.at - (GLYPH_LAST_2 + c.ms('--dur-glyph-2')),
+                              dur:'--dur-glyph-2', from:g.from, ease:'--ease-entry' })),
       { kind:'lines',  target:'about',    after:'headline', at: 0 },
       { kind:'cycler', target:'cycler',   after:'headline', at: 300 },
       // "Freelancer? ..." then "Building a brand? ..." land after the
