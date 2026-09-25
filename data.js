@@ -11,13 +11,13 @@ const COPY = {
               'and freelancers. Think of it as a potluck of vetted freelancers, brought together ' +
               'to form tailored teams for clients.',
   contact: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
-           '<b>hello@jitterbugfolk.com</b>',
+           '<a class="mail" href="mailto:hello@jitterbugfolk.com"><b>hello@jitterbugfolk.com</b></a>',
   // board 2's frame sets the address in red at medium weight, not bold black
   contactV2: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
-             '<span class="email">hello@jitterbugfolk.com</span>',
+             '<a class="mail email" href="mailto:hello@jitterbugfolk.com">hello@jitterbugfolk.com</a>',
   // the phone frame ends this line with a full stop; the desktop one does not
   contactM: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need.<br>' +
-            '<span class="email">hello@jitterbugfolk.com</span>',
+            '<a class="mail email" href="mailto:hello@jitterbugfolk.com">hello@jitterbugfolk.com</a>',
   // board 2's frame sets the brand name in the accent red, and the paragraph larger
   reimaginesV2: '<span class="brand">Jitterbug Folk</span> reimagines word of mouth, bridging the gap ' +
                 'between founders and freelancers. Think of it as a potluck of vetted freelancers, ' +

@@ -132,6 +132,17 @@ html, body{
 }
 .t.lead{ font-size:47px; line-height:55px; }
 .t b{ font-weight:700; font-variation-settings:"wdth" 100; }
+/* The address is a live mailto link. The boards are pixel-faithful at rest, so
+   it has to look exactly as it did — the affordance is hover and focus only.
+   The underline sits on .w as well as the anchor because splitWords wraps every
+   word in an inline-block, and text decoration is not painted across an atomic
+   inline box: on the <a> alone it would silently render nothing. Declared above
+   .email so that rule still wins the colour on board 2 and phone. */
+.t .mail{ color: inherit; text-decoration: none; cursor: pointer; }
+.t .mail:hover, .t .mail:hover .w{
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+}
+.t .mail:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 .t .email{ color: var(--accent); font-weight:700; font-variation-settings:"wdth" 100; }
 .t .brand{ color: var(--accent); font-weight:700; font-variation-settings:"wdth" 100; }
 .t.lg{ font-size:19px; line-height:26px; }
@@ -142,6 +153,17 @@ html, body{
 .t.m-head{ font-size:20px; line-height:28px; }
 .t.m-body{ font-size:14px; line-height:22px; }
 .t.m-contact{ font-size:14px; line-height:23px; text-align:center; white-space:nowrap; }
+/* The address is 15px tall, far under a thumb's worth, so on the phone the
+   anchor carries an invisible hit area about 45px deep. It is a positioned
+   pseudo-element rather than padding, so nothing in the layout shifts. The
+   growth is biased downward — the contact block is the last thing on the
+   page, so that space is free, while upward it would start stealing taps
+   from the line above. */
+.t.m-contact .mail{ position: relative; }
+.t.m-contact .mail::after{
+  content:''; position:absolute; left:-10px; right:-10px; top:-6px; bottom:-24px;
+}
+
 
 /* DISPLAY FACE ---------------------------------------------------
    The frame sets this phrase in JejuHallasan, which is not
