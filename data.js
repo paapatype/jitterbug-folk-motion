@@ -154,9 +154,11 @@ const BOARDS = {
                          html:'<b>' + COPY.headline.replace('<b-end> ','</b><br>'),
                          x:40, y:40, w:322, h:129 },
 
-        // centred on the frame: (402 - 281) / 2, so the margins match either side
+        // sits just inside the headline's column: 4px in from its left edge, and
+        // ending ~18px short of its right, which is how the reference lines the
+        // two blocks up
         { id:'about',    kind:'text', cls:'t m-body', html:COPY.reimaginesV2,
-                         x:60.5, y:540, w:281, h:124 },
+                         x:44, y:540, w:300, h:124 },
 
         // a full-width strip: the entries slide through it and run off both edges
         { id:'cycler',   kind:'cycler', mode:'slide', phrases:PHRASES,
