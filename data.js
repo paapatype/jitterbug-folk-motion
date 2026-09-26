@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------
-   Board data. Both boards are described here; there is no
+   Board data. The board is described here; there is no
    board-specific code anywhere else in the prototype.
    All x/y/w/h are Figma frame coordinates (frame = 1512 x 982).
 ---------------------------------------------------------------- */
@@ -7,11 +7,6 @@
 const COPY = {
   headline: 'Nine out of ten freelancers<b-end> we talked to found their last project ' +
             'through the good ol’ word of mouth - someone they know, knows someone who needed help.',
-  reimagines: '<b>Jitterbug Folk </b>reimagines word of mouth, bridging the gap between founders ' +
-              'and freelancers. Think of it as a potluck of vetted freelancers, brought together ' +
-              'to form tailored teams for clients.',
-  contact: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
-           '<a class="mail" href="mailto:hello@jitterbugfolk.com"><b>hello@jitterbugfolk.com</b></a>',
   // board 2's frame sets the address in red at medium weight, not bold black
   contactV2: 'Freelancer? Tell us what you do.<br>Building a brand? Tell us what you need<br>' +
              '<a class="mail email" href="mailto:hello@jitterbugfolk.com">hello@jitterbugfolk.com</a>',
@@ -30,65 +25,21 @@ const COPY = {
 const PHRASES = ['Trusted Talent', 'Tailored Teams', 'Non-Agency Setup',
                  'BrandBugs', 'SocialBugs', 'StoryBugs', 'DesignBugs'];
 
-/* Board 1's slot is two lines tall and centred, so its phrases carry
-   their own break to match the frame's "Trusted / Talent" setting. */
-const PHRASES_BRUSH = ['Trusted\nTalent', 'Tailored\nTeams', 'Non-Agency\nSetup', 'Brand\nBugs', 'Social\nBugs'];
-
-/* glyph entrances, shared by both boards ------------------------- */
+/* glyph entrances ------------------------- */
 const GLYPH_IN = [
   { id: 'j', at:   0, from: { x: -120 } },   // from the left
   { id: 'b', at: 180, from: { y: -140 } },   // from the top
   { id: 'f', at: 360, from: { x:  120 } }    // from the right
 ];
-// when the last of the three starts, relative to the first
-const GLYPH_LAST = Math.max(...GLYPH_IN.map(g => g.at));
 
-// Board 2's lockup arrives more slowly than board 1's: the stagger is stretched
-// by the same factor as --dur-glyph-2 is against --dur-glyph, so the rhythm
-// between the three letters is unchanged, only its pace.
+// The lockup arrives slowly: the stagger is stretched by 1.35 against
+// --dur-glyph, so the rhythm between the three letters is unchanged, only
+// its pace.
 const GLYPH_SLOW  = 1.35;
 const GLYPH_IN_2  = GLYPH_IN.map(g => ({ ...g, at: Math.round(g.at * GLYPH_SLOW) }));
 const GLYPH_LAST_2 = Math.max(...GLYPH_IN_2.map(g => g.at));
 
 const BOARDS = {
-  /* =============================== BOARD 1 =============================== */
-  '1': {
-    nodes: [
-      // paint order matches the Figma layer order: b, creature, j, f
-      { id:'b',        kind:'svg',  src:'assets/b.svg',        x:349, y:129, w:168, h:254, tint:true },
-      { id:'creature', kind:'svg',  src:'assets/creature.svg', x:246, y:201, w:375, h:465 },
-      { id:'j',        kind:'svg',  src:'assets/j.svg',        x:213, y:150, w: 85, h:438, tint:true },
-      { id:'f',        kind:'svg',  src:'assets/f.svg',        x:496, y:180, w:129, h:276, tint:true },
-
-      // the frame's box is 301x121 (sized for "Trusted / Talent"); the slot is
-      // widened around the same centre line so the longer motion-only phrases
-      // neither wrap nor clip. "Trusted / Talent" still lands exactly as drawn.
-      { id:'cycler',   kind:'cycler', mode:'single', phrases:PHRASES_BRUSH,
-                       cls:'brush', x:83.5, y:740, w:700, h:124 },
-
-      { id:'intro',    kind:'text', cls:'t', html:COPY.headline.replace('<b-end>',''),
-                       x:935, y:221, w:335, h:105 },
-      { id:'about',    kind:'text', cls:'t', html:COPY.reimagines,
-                       x:935, y:363, w:335, h:127 },
-      { id:'contact',  kind:'text', cls:'t', html:COPY.contact,
-                       x:935, y:609, w:385, h:81 }
-    ],
-
-    timeline: [
-      ...GLYPH_IN.map(g => ({ kind:'glyph', target:g.id, at:g.at, dur:'--dur-glyph',
-                              from:g.from, ease:'--ease-entry' })),
-      // the mascot completes the lockup once the three letters have settled
-      { kind:'fade', target:'creature', at: 1250, dur:'--dur-glyph', ease:'--ease-entry' },
-      { kind:'cycler', target:'cycler', at: 2700 },
-      // right-hand column, line by line, only after the lockup is at rest.
-      // Each block picks up where the previous one finished, so the whole
-      // column reads as one continuous cascade instead of three overlaps.
-      { kind:'lines', target:'intro',   at: 2900 },
-      { kind:'lines', target:'about',   after:'intro', at: 0 },
-      { kind:'lines', target:'contact', after:'about', at: 0 }
-    ]
-  },
-
   /* =============================== BOARD 2 =============================== */
   '2': {
     nodes: [

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------
    Bootstrap: build the requested board from data, fit it to the
-   viewport, run the timeline, wire the hover-only switcher.
+   viewport, run the timeline.
 ---------------------------------------------------------------- */
 
 const HOLD = 3130;   // how long a phrase sits at the centre of the cycler (15% faster)
@@ -46,7 +46,6 @@ const BUILD = {
   },
 
   cycler(node){
-    if (node.mode === 'single') return cyclerSingle(node);
     if (node.mode === 'slide')  return cyclerSlide(node);
     return cyclerStack(node);
   },
@@ -104,80 +103,6 @@ async function loadWalk(base){
   await Promise.race([started, new Promise(r => setTimeout(r, 1500))]);
 
   return { manifest, frames };
-}
-
-/* board 1 — one phrase at a time, leaving and arriving letter by letter.
-   The old phrase is fully gone before the new one starts: two phrases
-   crossfading in the same place read as a ghosted double exposure, not
-   as a change, so they are sequenced rather than blended. */
-function cyclerSingle(node){
-  const box = document.createElement('div');
-  box.className = 'cycler-single';
-
-  const phrases = node.phrases.map(text => {
-    const el = document.createElement('div');
-    el.className = 'phrase ' + node.cls;
-    // the letters go inside one block child: .phrase is a flex container, so
-    // splitting its text directly would turn every letter into a flex item
-    // and collapse the two-line setting into a single row
-    const inner = document.createElement('span');
-    inner.className = 'phrase-text';
-    inner.textContent = text;
-    el.appendChild(inner);
-    box.appendChild(el);
-    return { el, chars: splitChars(inner) };   // splitChars() lives in timeline.js
-  });
-
-  const D     = tokenMs('--dur-letter');
-  const STEP  = tokenMs('--stagger-letter');
-  const RISE  = parseFloat(token('--letter-rise'));
-  const DIP   = parseFloat(token('--letter-dip'));
-  const FROM  = parseFloat(token('--cycle-in-from'));
-  const GAP   = tokenMs('--cycle-gap');
-  const EASE_OUT = token('--ease-letter-out');
-  const EASE_DIP = token('--ease-letter-dip');
-  const EASE_IN  = token('--ease-letter-in');
-  const DIP_AT   = 0.22;    // where in the exit the dip bottoms out
-
-  // both return how long the whole phrase takes, last letter included
-  const span = p => (p.chars.length - 1) * STEP + D;
-
-  // the dip is an explicit keyframe rather than a side effect of an
-  // overshooting curve, so its depth is exact and tunable from :root
-  const exit = p => {
-    p.chars.forEach((c, i) => c.animate(
-      [{ opacity: 1, transform: 'translateY(0px)',          easing: EASE_DIP },
-       { opacity: 1, transform: `translateY(${DIP}px)`,     easing: EASE_OUT, offset: DIP_AT },
-       { opacity: 0, transform: `translateY(${-RISE}px)` }],
-      { fill: 'both', duration: D, delay: i * STEP }));
-    return span(p);
-  };
-
-  const enter = p => {
-    p.chars.forEach((c, i) => c.animate(
-      [{ opacity: 0, transform: `translateY(${FROM}px)` },
-       { opacity: 1, transform: 'translateY(0px)' }],
-      { fill: 'both', duration: D, delay: i * STEP, easing: EASE_IN }));
-    return span(p);
-  };
-
-  let i = 0;
-
-  // phrase lengths differ, so each leg is scheduled off the previous one's
-  // real duration rather than off a fixed interval
-  function queue(afterEntry){
-    setTimeout(() => {
-      const out = exit(phrases[i]);
-      setTimeout(() => {
-        i = (i + 1) % phrases.length;
-        queue(enter(phrases[i]));
-      }, out + GAP);                  // the gap is what keeps the two apart
-    }, afterEntry + HOLD);
-  }
-
-  box._start = delay => setTimeout(() => queue(enter(phrases[0])), delay);
-
-  return box;
 }
 
 /* phone — a horizontal slide carrying the whole list.
@@ -327,41 +252,11 @@ function fit(){
   stage.style.transform = `scale(${s})`;
 }
 
-function wireSwitcher(current){
-  const nav = document.getElementById('switcher');
-
-  // a real reload, so the whole timeline replays from frame zero
-  const go = v => { if (v !== current) window.location.search = '?v=' + v; };
-
-  for (const btn of nav.querySelectorAll('button')){
-    const v = btn.dataset.v;
-    btn.setAttribute('aria-current', String(v === current));
-    btn.addEventListener('click', () => go(v));
-  }
-
-  // Reveal on pointer movement into the top-right corner, driven from JS
-  // rather than left to :hover, which does not fire in every embedded browser.
-  const zw = parseFloat(token('--switch-zone-w'));
-  const zh = parseFloat(token('--switch-zone-h'));
-  window.addEventListener('mousemove', e => {
-    const inCorner = e.clientX > window.innerWidth - zw && e.clientY < zh;
-    nav.classList.toggle('is-shown', inCorner);
-  }, { passive: true });
-
-  // Keys are the reliable route: they need no hover and leave no trace on a
-  // screen recording. 1 and 2 pick a board, left/right step between them.
-  window.addEventListener('keydown', e => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key === '1' || e.key === '2') go(e.key);
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') go(current === '1' ? '2' : '1');
-  });
-}
-
 (async function init(){
-  // board 2 is the current version and the one the shared link must open on;
-  // board 1 is the earlier board, still reachable at ?v=1
-  const v = new URLSearchParams(location.search).get('v') === '1' ? '1' : '2';
-  document.title = `Jitterbug Folk — board ${v}`;
+  // One board now: the earlier variation and its switcher went when the client
+  // settled on this one. The token stays because app.css hangs the board-scoped
+  // custom properties off `body.board-2`.
+  const v = '2';
   document.body.classList.add('board-' + v);      // board-scoped colour tokens
 
   const view = layoutFor(v);
@@ -383,7 +278,6 @@ function wireSwitcher(current){
   const { board, els } = buildBoard(view.board, view.nodes);
   fit();
   window.addEventListener('resize', fit);
-  wireSwitcher(v);
 
   // elements revealed span-by-span must be visible themselves;
   // only whole-element entrances start from opacity 0

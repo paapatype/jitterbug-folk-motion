@@ -83,9 +83,6 @@ body.board-2{
   --frame-w: 1512px;
   --frame-h: 982px;
 
-  /* the corner that reveals the board switcher */
-  --switch-zone-w: 360px;
-  --switch-zone-h: 150px;
 }
 
 *{ box-sizing: border-box; }
@@ -281,48 +278,4 @@ html, body{
   font-weight:500;
   color: var(--m-grey);
   white-space:nowrap;
-}
-
-/* ---------- hover-only variation switcher ---------- */
-body.phone .switcher-zone{ display:none; }
-
-.switcher-zone{
-  position:fixed; top:0; right:0;
-  width:var(--switch-zone-w); height:var(--switch-zone-h);
-  z-index:10;
-}
-.switcher{
-  position:absolute; top:24px; right:28px;
-  display:flex; gap:6px;
-  opacity:0;
-  transition: opacity 200ms var(--ease-cross);
-  pointer-events:none;
-}
-/* `.is-shown` is set from JS on pointer movement into the corner. :hover alone
-   is not enough — it never fires in some embedded/preview browsers, which is
-   how the switcher ended up feeling absent. Keys 1 and 2 work regardless. */
-.switcher-zone:hover .switcher,
-.switcher.is-shown,
-.switcher:focus-within{ opacity:1; pointer-events:auto; }
-
-.switcher button{
-  font-family:'Instrument Sans', system-ui, sans-serif;
-  font-variation-settings:"wdth" 100;
-  font-weight:500;
-  font-size:13px;
-  line-height:1;
-  width:28px; height:28px;
-  border:1px solid rgba(0,0,0,.18);
-  border-radius:50%;
-  background:var(--paper);
-  color:rgba(0,0,0,.55);
-  cursor:pointer;
-  padding:0;
-  transition: color 160ms var(--ease-cross),
-              border-color 160ms var(--ease-cross),
-              background 160ms var(--ease-cross);
-}
-.switcher button:hover{ color:var(--ink); border-color:rgba(0,0,0,.45); }
-.switcher button[aria-current="true"]{
-  background:var(--ink); border-color:var(--ink); color:var(--paper);
 }

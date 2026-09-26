@@ -1,35 +1,41 @@
 # Jitterbug Folk — motion study
 
-Animated prototype of the two selected Figma frames, `1` (138:36) and `2` (139:55).
-Geometry, type and colour come from the file; the only thing added is time.
+Animated prototype of the selected Figma frame, `139:55`. Geometry, type and
+colour come from the file; the only thing added is time.
 
-    http://localhost:4321/         board 2 — the current version
-    http://localhost:4321/?v=1     board 1 — the earlier board
+    http://localhost:4321/          the board
+    http://localhost:4321/?m=1      the phone layout, forced
 
-Three ways to switch board:
-
-* **press `1` or `2`** — or left/right arrow to toggle. No hover needed, and it
-  leaves nothing on screen, so it is the safe route while screen recording.
-* **move the pointer into the top-right corner** of the browser window (a
-  360x150 patch) and the two buttons fade in.
-* **edit the URL** — `?v=1` / `?v=2`.
-
-Any of them reloads the page, so the timeline always replays from frame zero.
-
-The switcher is invisible at rest by design. Note that it is anchored to the
-top-right of the *window*, not of the artwork — on a wide window those are far
-apart, which makes it easy to miss. The keys are the dependable route.
+There was a second board (`138:36`) and a corner switcher for moving between
+them, so the client could choose. She chose this one, and both were removed.
+`?v=1` still resolves — it falls through to the one board rather than breaking,
+so older links keep working. **The sections further down still discuss that
+second board where it explains a decision; read those as history.**
 
 ## Files
 
 | file | what it holds |
 |---|---|
-| `data.js` | both boards as data — node geometry, copy, and the timeline arrays |
-| `timeline.js` | the cue runner and the five effects (`fade`, `glyph`, `lines`, `type`, `cycler`) |
-| `main.js` | builds the DOM from the data, fits the 1512x982 stage to the window, wires the switcher |
-| `app.css` | the motion tokens, the frame's typography, the two cycler treatments |
+| `data.js` | the board as data — node geometry, copy, and the timeline arrays |
+| `timeline.js` | the cue runner and its effects (`fade`, `glyph`, `lines`, `words`, `walk`, `cycler`) |
+| `main.js` | builds the DOM from the data, fits the 1512x982 stage to the window |
+| `app.css` | the motion tokens, the frame's typography, the cycler treatments |
 | `assets/` | `j`, `b`, `f` and the mascot, exported from Figma as individual vectors |
-| `assets/walk/` | the mascot's walk-in for board 2 — 89 matted WebP frames, `walk.json`, plus the source footage and a still |
+| `assets/walk/` | the mascot's walk-in — 89 matted WebP frames plus `walk.json` |
+| `assets/walk-m/` | the same walk at phone scale |
+
+## Shipping an update
+
+The working copy is `prototype/`; this repo is the deploy copy. To ship:
+
+1. `rsync -a --delete --exclude 'source.mp4' prototype/assets/ <repo>/assets/`
+   — **the exclude matters**: `source.mp4` is the 1920x1080 original and must
+   not ship.
+2. Copy `app.css`, `data.js`, `timeline.js`, `main.js`, `README.md` across.
+3. `sed 's/?b=BUILD/?b=<timestamp>/g' prototype/index.html > <repo>/index.html`
+   — the stamp defeats GitHub Pages' ten-minute cache. Vercel invalidates per
+   deploy and does not need it.
+4. Commit, then push to whichever remote should receive it.
 
 ## Retuning the motion
 
